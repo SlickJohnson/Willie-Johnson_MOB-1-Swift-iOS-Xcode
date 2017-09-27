@@ -1,5 +1,21 @@
 import Foundation
 
+/*:
+ 
+ # Protocols
+ 
+ A protocol defines a blueprint of methods, properties, and other requirements that
+ suit a particular task or piece of functionality.
+ 
+ The protocol can then be adopted by a class, structure, or enumeration to provide 
+ an actual implementation of those requirements. Any type that satisfies the 
+ requirements of a protocol is said to conform to that protocol.
+ 
+ 
+ ## Defining and conforming to a Protocol
+ 
+ */
+
 enum Food {
     case fish
     case sandwich
@@ -30,7 +46,7 @@ myOrka.eat()
 
 /*:
  Protocols can also have required properties like variables
-*/
+ */
 
 protocol Sandwich {
     var diameter: Int {get set}
@@ -46,7 +62,7 @@ protocol Sandwich {
  
  A class on the other hand can only inherit from one Super class(Base class)
  
-*/
+ */
 
 // Protocol Definitions
 protocol Vertibrates {}
@@ -58,58 +74,70 @@ protocol Bird: Flyable, Vertibrates {}
 class Fish: Vertibrates, CanSwim {}
 struct Amphibian: Vertibrates, CanSwim {}
 
+/*:
+ 
+ ## Protocol Extensions
+ 
+ Protocols on their own do not have any functionality, they define contracts
+ that an conformer must adhere to. To add functionality to a protocol, we can
+ extent it.
+ 
+ */
 
-enum ChangeType {
-    case increase
-    case decrease
-}
-
-struct Health {
-    var value: Int = 100
-    var changeAmount: Int = 10
-    
-    mutating func change(type: ChangeType) {
-        switch type {
-        case .increase:
-            value += changeAmount
-        case .decrease:
-            value -= value
-        }
-    }
-}
 
 protocol Character {
-    var health: Health {get set}
-    
-    func changeHealth(character: Character, type: ChangeType) -> Character
-}
-
-extension Character {
-    func changeHealth(character: Character, type: ChangeType) -> Character {
-        return character
-    }
+    var health: Int {get set}
+    var strenght: Int {get}
+    var aim: Int {get set}
 }
 
 struct Henchman: Character {
-    var health: Health = Health()
+    var health: Int
+    var aim: Int
 }
 
-struct Hero: Character, Hittable {
-    var health: Health = Health()
+struct Hero: Character {
+    var health: Int
+    let strenght: Int
+    var aim: Int
 }
 
-protocol Hittable {
-    func hit(target: Character) -> Character
-    func takeDamage()
-}
+/*:
+ ## Restricting Protocols to specific types
+ 
+ We can restrict protocols to specific instance types by using the ```where``` keyword and ```Self``` referring to the conforming instance (Henchman in  the example below)
+ 
+ */
 
-extension Hittable {
-    func hit(target: Character) -> Character {
-        return target.changeHealth(character: target, type: .decrease)
+extension Character where Self == Henchman {
+    var strenght: Int {
+        return 200
     }
-
-    func takeDamage() {}
 }
+
+let stormtropper = Henchman(health: 100, aim: -100)
+stormtropper.strenght
+
+/*:
+ 
+ *Notice* how stromtropper has a default strenght of 200 even though we didn't specify it in its initializer or struct defininition?
+ 
+ This is because we provided a default implementation of strenght for only henchmen
+ */
+
+
+
+/*:
+ ## Constraining Protocols
+ We can constrain protocols to classes were we are only going to use this protocol on classes
+ 
+ */
+
+protocol TapDetectionDelegate: class {
+    func didTapCircle(x: Int, y: Int)
+}
+
+
 /*:
  ## Protocol methods and conformation, Required vs Optional
  
@@ -119,7 +147,7 @@ extension Hittable {
  To to this, we must mark our protocol with @objc, even though we are not interacting with Objective-C.
  Doing this imposes some restrictions, one of them being that we can only use the protocol on reference types.
  
-*/
+ */
 
 @objc protocol Purchasable {
     @objc optional var discount: Double {get set}
@@ -131,15 +159,15 @@ extension Hittable {
 /*:
  ## Multiple Protocol Restriction
  
- Remember, protocols are also *types* and we can return then when a type in a function signature is expected
-*/
+ Remember, protocols are also *types* and we can return them when a type in a function signature is expected
+ */
 
-protocol Biped{
+protocol Biped {
     func name() -> String
     func walk()
 }
 
-protocol Hairy{
+protocol Hairy {
     func hairColor() -> String
 }
 
@@ -164,35 +192,127 @@ class Ostrich: Biped, Hairy {
 func describe(item: Biped & Hairy) -> String {
     return("\(item.name()) 's hair color is \(item.hairColor())))")
 }
+
 //: Ostrich is *Biped* and *Hairy*
 describe(item: Ostrich())
 
 //: Dog does not conform to *Biped* so it wont be accepted into the describe function
-// describe(item: Dog()) // error: Dog() doesn't conform to Describable
+// describe(item: Dog()) // error: Dog() doesn't conform to Biped
 
 /*:
  
  ## Challenges
  
- 1. Create a model of a car, it should have a max speed, number of wheels, doors and model properties.
- 2. Generalize the car, create a model for a vehicle, a car & motocycles are vehicles
+ 1. a. Create a model of a car, it should have a max speed, number of wheels, doors and model properties.
+ b. Generalize the car, create a model for a vehicle which will represent all vehicles, a truck, motocycle & bus are vehicles
+ 
+ 2.
+ */
+struct Model {
+    var make: String
+    var name: String
+    var year: Int
+    
+    init(make: String, name: String, year: Int) {
+        self.make = make
+        self.name = name
+        self.year = year
+    }
+}
+
+protocol Vehicle: class {
+    var maxSpeed: Int {get set}
+    var numberOfWheels: Int {get set}
+    var numberOfDoors: Int {get set}
+    var model: Model {get set}
+    
+    func drive()
+}
+
+class Prius: Vehicle {
+    var maxSpeed: Int
+    var numberOfWheels: Int = 4
+    var numberOfDoors: Int
+    var model: Model = Model(make: "Toyota", name: "Prius", year: 2017)
+    
+    init(maxSpeed: Int, numberOfDoors: Int) {
+        self.maxSpeed = maxSpeed
+        self.numberOfDoors = numberOfDoors
+    }
+    
+    func drive() {
+        print("The Prius is driving")
+    }
+}
+
+var prius = Prius(maxSpeed: 200, numberOfDoors: 4)
+prius.drive()
+
+protocol CanMakeNoise {
+    func makeNoise()
+}
+
+extension Human: CanMakeNoise {
+    func makeNoise() {
+        print("YOLO")
+    }
+}
+
+class Elephant: CanMakeNoise {
+    func makeNoise() {
+        print("BRRRRR")
+    }
+}
+
+class Pig: CanMakeNoise {
+    func makeNoise() {
+        print("OINK")
+    }
+}
+
+class Cow: CanMakeNoise {
+    func makeNoise() {
+        print("MOO")
+    }
+}
+
+let human = Human()
+let elephant = Elephant()
+let pig = Pig()
+let cow = Cow()
+
+let arrayOfNoiseMaker: [CanMakeNoise] = [human, pig, cow]
+
+for x in arrayOfNoiseMaker {
+    x.makeNoise()
+}
+/*:
+ 
+ 2 a. Uncomment above line and make the code compile. This can be achieved by implementing the `CanMakeNoise` protocol in all the classes above. Think about a noise each class could make and print it to the console using `print`.
+ 
+ b. Iterate over `arrayOfNoiseMaker` and let each object make their noise
+ 
+ */
+
+/*:
  3.
  
  Take at look at the protocol definition for Equatable by Apple:
  
+ ```
  public protocol Equatable {
  
- /// Returns a Boolean value indicating whether two values are equal.
- ///
- /// Equality is the inverse of inequality. For any values `a` and `b`,
- /// `a == b` implies that `a != b` is `false`.
- ///
- /// - Parameters:
- ///   - lhs: A value to compare.
- ///   - rhs: Another value to compare.
+ Returns a Boolean value indicating whether two values are equal.
+ 
+ Equality is the inverse of inequality. For any values `a` and `b`,
+ `a == b` implies that `a != b` is `false`.
+ 
+ - Parameters:
+ - lhs: A value to compare.
+ - rhs: Another value to compare.
  public static func ==(lhs: Self, rhs: Self) -> Bool
  }
- 
+ ```
  
  Given the Artist struct below, implement the Equatable protocol
  
@@ -202,7 +322,6 @@ describe(item: Ostrich())
  What makes them equal? Is it their colors? Their sizes? Its up to you to determine that.
  
  */
-
 // Used by Artist to determine style of Artist
 enum Style: String {
     case impressionism
@@ -211,10 +330,14 @@ enum Style: String {
     case popArt
 }
 
-struct Artist {
+struct Artist: Equatable {
     let name: String
     let style: Style
     let yearBorn: Int
+    
+    public static func ==(lhs: Artist, rhs: Artist) -> Bool {
+        return lhs.name == rhs.name
+    }
 }
 
 // Example instances of Artists, use for testing your equatable
@@ -222,9 +345,9 @@ let monet = Artist(name: "monet", style: .impressionism, yearBorn: 1840)
 let dali = Artist(name: "Salvador Dali", style: .surrealism, yearBorn: 1904)
 let andy = Artist(name: "Andy Warhol", style: .popArt, yearBorn: 1928)
 
-//: ### Test your equatable protocol Below HERE
-
+print(monet == dali)
 /*:
+ 
  4. Write an iterator for a 2Dimentional array. Eg. Given [[2,5,9], [0, 4, 2], [6, 8, 3]],
  you should be able to iterate through each element sequentially 2,5,9,0,4,2,6,8,3.
  
@@ -233,8 +356,49 @@ let andy = Artist(name: "Andy Warhol", style: .popArt, yearBorn: 1928)
  There are some protocols you can leverage in the collection data types to help guide you.
  
  
-*/
+ */
+struct TwoDArray: Sequence {
+    let array: [[Int]]
+    
+    func makeIterator() -> TwoDArrayIterator {
+        return TwoDArrayIterator(self)
+    }
+    
+    func count() -> Int {
+        return array.count
+    }
+    
+    subscript(index: Int) -> [Int] {
+        return array[index]
+    }
+}
 
+struct TwoDArrayIterator: IteratorProtocol {
+    var times = 0
+    var array: TwoDArray
+    
+    init(_ array: TwoDArray) {
+        self.array = array
+    }
+    
+    mutating func next() -> String? {
+        let nextNumber = times
+        
+        guard times < array.count()
+            else { return nil }
+        
+        times += 1
+        
+        return array[nextNumber].map{ String($0) }.joined(separator: ",")
+    }
+    
+}
+
+let threeTwoOne = TwoDArray(array: [[2,5,9], [0, 4, 2], [6, 8, 3]])
+
+for count in threeTwoOne {
+    print("\(count)")
+}
 
 
 //: [Next](@next)
